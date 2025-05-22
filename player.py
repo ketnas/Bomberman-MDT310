@@ -267,7 +267,7 @@ class Player:
     def get_score(self):
         return self.__score
     
-    def set_score(self, score):
+    def set_score1(self, score):
         self.__score = score
     
     def load_animations(self, en, scale):

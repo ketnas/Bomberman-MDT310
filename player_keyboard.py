@@ -112,6 +112,9 @@ class PlayerKeyboard:
                 
     def get_score(self):
         return self.__score
+    
+    def set_score1(self, score):
+        self.__score = score
 
     def load_animations(self, scale):
         front = []
