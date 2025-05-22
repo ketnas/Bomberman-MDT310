@@ -1,13 +1,14 @@
 import pygame
 import sys
 import random
+import pandas as pd
 
 from player_keyboard import PlayerKeyboard
 from player import Player
 from explosion import Explosion
 from enemy import Enemy
 from enums.algorithm import Algorithm
-from submission import YourPlayer
+# from submission import YourPlayer
 
 
 BACKGROUND_COLOR = (161, 196, 88)
@@ -39,11 +40,12 @@ GRID_BASE = []
 start_time = 60  # 1 minutes
 start_ticks = pygame.time.get_ticks()
 
-def game_init(surface, path, player_alg1,player_alg2, en_alg, scale,grid,FPS = 15):
+def game_init(surface, path, player_alg1,player_alg2, en_alg, scale,grid,player1,player2,match,FPS = 15):
     # เริ่มต้นเกม และทำการโหลดภาพพื้นฐาน
     global font
     font = pygame.font.SysFont('Bebas', scale)
-
+    global start_ticks 
+    start_ticks = pygame.time.get_ticks()
     global enemy_list
     global ene_blocks
     global player_1
@@ -96,7 +98,7 @@ def game_init(surface, path, player_alg1,player_alg2, en_alg, scale,grid,FPS = 1
         player_1.load_animations(scale)
         player_blocks.append(player_1)
     elif player_alg1 is not Algorithm.NONE:
-        player_bot = YourPlayer(1, 1, 1, player_alg1)
+        player_bot = player1.YourPlayer(1, 1, 1, player_alg1)
         player_bot.load_animations('1', scale)
         player_list.append(player_bot)
         player_blocks.append(player_bot)
@@ -104,7 +106,7 @@ def game_init(surface, path, player_alg1,player_alg2, en_alg, scale,grid,FPS = 1
         player_1.life = False
         
     if player_alg2 is not Algorithm.NONE:
-        player_bot = YourPlayer(2,w-2, h-2, player_alg2)
+        player_bot = player2.YourPlayer(2,w-2, h-2, player_alg2)
         player_bot.load_animations('2', scale)
         player_list.append(player_bot)
         player_blocks.append(player_bot)
@@ -142,8 +144,8 @@ def game_init(surface, path, player_alg1,player_alg2, en_alg, scale,grid,FPS = 1
     explosion_images = [explosion1_img, explosion2_img, explosion3_img]
 
 
-    main(surface, scale, path, terrain_images, bomb_images, explosion_images, FPS)
-
+    winner = main(surface, scale, path, terrain_images, bomb_images, explosion_images,match, FPS)
+    return winner
 
 def draw(s, grid, tile_size, show_path, game_ended, terrain_images, bomb_images, explosion_images,seconds):
     s.fill(BACKGROUND_COLOR)
@@ -201,7 +203,7 @@ def draw(s, grid, tile_size, show_path, game_ended, terrain_images, bomb_images,
     pygame.display.update()
 
 
-def generate_map(grid):
+def generate_map(grid,match):
     # สร้างกล่องเปล่าไว้ใน map
     for i in range(1, len(grid) - 1):
         for j in range(1, len(grid[i]) - 1):
@@ -210,22 +212,29 @@ def generate_map(grid):
             #บางตำแหน่งจะไม่มีกล่องเปล่า เช่น มุมของ map เพราะจะให้ ผู้เล่นและ ghost มีทางหนี
             elif (i < 4 or i > len(grid) - 5) and (j < 4 or j > len(grid[i]) - 5):
                 continue
-            # 30% chance to place a box วางกล่องเปล่าไว้
-            if random.randint(0, 9) < 3:
-                grid[i][j] = 2
+            
+            if match == 1:
+                # 10% chance to place a box วางกล่องเปล่าไว้
+                if random.randint(0, 9) < 1:
+                    grid[i][j] = 2
+            else:
+                # 30% chance to place a box วางกล่องเปล่าไว้
+                if random.randint(0, 9) < 3:
+                    grid[i][j] = 2
 
     return
 
 
-def main(s, tile_size, show_path, terrain_images, bomb_images, explosion_images,FPS = 15):
+def main(s, tile_size, show_path, terrain_images, bomb_images, explosion_images,match,FPS = 15):
 
     grid = [row[:] for row in GRID_BASE]
-    generate_map(grid)
+    generate_map(grid,match)
     
     clock = pygame.time.Clock()
 
     # global start_time
-    
+    result = None
+    winner = None
     running = True
     game_ended = False
     last_time = 0
@@ -300,7 +309,9 @@ def main(s, tile_size, show_path, terrain_images, bomb_images, explosion_images,
                     print("Time's up!")
                     print("Player 1 score: ", player_list[0].get_score())
                     print("Player 2 score: ", player_list[1].get_score())
-                    print(check_winner())
+                    # print(check_winner())
+                    result, winner = check_winner()
+                    print(result)
                     break
             elif seconds != last_time:
                 last_time = seconds
@@ -340,8 +351,7 @@ def main(s, tile_size, show_path, terrain_images, bomb_images, explosion_images,
     ene_blocks.clear()
     player_list.clear()
     player_blocks.clear()
-
-
+    return winner
 
 def update_bombs(grid, dt):
     for b in bombs:
@@ -381,16 +391,16 @@ def check_end_game():
 
 def check_winner():
     if player_list[0].get_score() > player_list[1].get_score():
-        return "Player 1 wins!"
+        return "Player 1 wins!","team1"
     elif player_list[0].get_score() < player_list[1].get_score():
-        return "Player 2 wins!"
+        return "Player 2 wins!","team2"
     else:
         if player_list[0].step > player_list[1].step:
-            return "Player 1 wins!"
+            return "Player 1 wins!","team1"
         elif player_list[0].step < player_list[1].step:
-            return "Player 2 wins!"
+            return "Player 2 wins!","team2"
         else:
-            return "It's a draw!"
+            return "It's a draw!","draw"
 
 def update_time(screen,seconds):
     # Display timer
@@ -419,3 +429,5 @@ def display_debug_icon(screen):
     play_icon = pygame.image.load(image_path + 'play.png')
     # Display icons on screen
     screen.blit(play_icon, (x_offset, y_offset))
+
+
