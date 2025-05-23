@@ -1,5 +1,5 @@
 index,team1,team2,result_winner_1,result_winner_2,result_winner_3
-0,G-5,G-14,,,
+0,G-5,G-14,team2,team1,team2
 1,G-10,G-1,,,
 2,G-5,G-8,,,
 3,G-5,G-4,,,
