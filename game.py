@@ -395,9 +395,9 @@ def check_winner():
     elif player_list[0].get_score() < player_list[1].get_score():
         return "Player 2 wins!","team2"
     else:
-        if player_list[0].step > player_list[1].step:
+        if player_list[0].get_score() > player_list[1].get_score():
             return "Player 1 wins!","team1"
-        elif player_list[0].step < player_list[1].step:
+        elif player_list[0].get_score() < player_list[1].get_score():
             return "Player 2 wins!","team2"
         else:
             return "It's a draw!","draw"
